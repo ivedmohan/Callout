@@ -128,4 +128,3 @@ Or vibe-code at [cairo-coder.com](https://www.cairo-coder.com).
 ## License
 
 MIT
-# Callout

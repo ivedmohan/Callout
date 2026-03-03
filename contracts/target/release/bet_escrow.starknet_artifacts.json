@@ -1,0 +1,1 @@
+{"version":1,"contracts":[{"id":"3q9sg0d1p7tb0","package_name":"bet_escrow","contract_name":"BetEscrow","module_path":"bet_escrow::BetEscrow","artifacts":{"sierra":"bet_escrow_BetEscrow.contract_class.json","casm":null}}]}
