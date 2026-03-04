@@ -9,6 +9,24 @@ import { type Call, RpcProvider, type CallData } from 'starknet';
 import { CONTRACT_ADDRESS, RPC_URL } from './constants';
 import type { Bet, BetOption, Participant } from '@/types';
 
+// ─── felt252 encoding ───
+
+/** Max bytes a felt252 can hold (< 2^251, so 31 ASCII bytes). */
+export const FELT252_MAX_BYTES = 31;
+
+/**
+ * Encode a JS string as a felt252 hex value.
+ * Truncates to 31 bytes to fit in a single felt252.
+ */
+export function stringToFeltHex(str: string): string {
+  const truncated = str.slice(0, FELT252_MAX_BYTES);
+  let hex = '0x';
+  for (let i = 0; i < truncated.length; i++) {
+    hex += truncated.charCodeAt(i).toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+
 // ─── Build contract calls ───
 
 export function buildCreateBetCall(
@@ -21,7 +39,14 @@ export function buildCreateBetCall(
   return {
     contractAddress: CONTRACT_ADDRESS,
     entrypoint: 'create_bet',
-    calldata: [title, optionA, optionB, stakeAmount, '0', String(deadline)],
+    calldata: [
+      stringToFeltHex(title),
+      stringToFeltHex(optionA),
+      stringToFeltHex(optionB),
+      stakeAmount,
+      '0',
+      String(deadline),
+    ],
   };
 }
 
@@ -244,6 +269,25 @@ export async function getAllBets(): Promise<Bet[]> {
   for (let i = 1; i <= count; i++) {
     const bet = await getBet(String(i));
     if (bet) bets.push(bet);
+  }
+  return bets;
+}
+
+/**
+ * Fetches all bets WITH per-option participant counts.
+ * Slightly slower than getAllBets since it also fetches participants.
+ */
+export async function getAllBetsWithCounts(): Promise<Bet[]> {
+  const count = await getBetCount();
+  const bets: Bet[] = [];
+  for (let i = 1; i <= count; i++) {
+    const bet = await getBet(String(i));
+    if (bet) {
+      const participants = await getParticipants(String(i), bet.participantCount);
+      bet.optionACount = participants.filter((p) => p.option === 'A').length;
+      bet.optionBCount = participants.filter((p) => p.option === 'B').length;
+      bets.push(bet);
+    }
   }
   return bets;
 }

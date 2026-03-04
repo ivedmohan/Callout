@@ -17,7 +17,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-toastify": "^11.0.5",
-    "starkzap": "^1.0.0"
+    "starkzap": "^1.0.0",
+    "vercel": "^50.26.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

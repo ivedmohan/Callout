@@ -15,10 +15,16 @@ import { PrivyClient } from '@privy-io/node';
 import fs from 'fs';
 import path from 'path';
 
-const privy = new PrivyClient({
-  appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
-  appSecret: process.env.PRIVY_APP_SECRET!,
-});
+let _privy: PrivyClient | null = null;
+function getPrivy() {
+  if (!_privy) {
+    _privy = new PrivyClient({
+      appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
+      appSecret: process.env.PRIVY_APP_SECRET!,
+    });
+  }
+  return _privy;
+}
 
 // Simple file-based wallet mapping (MVP — use a database in production)
 const WALLET_MAP_PATH = path.join(process.cwd(), '.wallet-map.json');
@@ -28,11 +34,8 @@ type WalletData = { id: string; address: string; publicKey: string };
 function loadWalletMap(): Record<string, WalletData> {
   try {
     if (fs.existsSync(WALLET_MAP_PATH)) {
-      const raw = fs.readFileSync(WALLET_MAP_PATH, 'utf-8');
-      console.log(`[wallet/starknet] Loaded wallet map from ${WALLET_MAP_PATH}`);
-      return JSON.parse(raw);
+      return JSON.parse(fs.readFileSync(WALLET_MAP_PATH, 'utf-8'));
     }
-    console.log(`[wallet/starknet] Wallet map file not found at ${WALLET_MAP_PATH}`);
   } catch (err: any) {
     console.error(`[wallet/starknet] Failed to load wallet map:`, err?.message);
   }
@@ -51,21 +54,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Verify the access token and extract the user ID
-    const { user_id } = await privy.utils().auth().verifyAccessToken(accessToken);
-    console.log(`[wallet/starknet] user_id from token: ${user_id}`);
+    const { user_id } = await getPrivy().utils().auth().verifyAccessToken(accessToken);
 
     // 2. Check our local mapping first
     const walletMap = loadWalletMap();
-    console.log(`[wallet/starknet] Wallet map keys: ${Object.keys(walletMap).join(', ') || '(empty)'}`);
-    console.log(`[wallet/starknet] Match for user? ${!!walletMap[user_id]}`);
     if (walletMap[user_id]) {
-      console.log(`[wallet/starknet] Reusing mapped wallet ${walletMap[user_id].id} for user ${user_id}`);
       return NextResponse.json({ wallet: walletMap[user_id] });
     }
 
     // 3. No mapping — create a new app-owned wallet
     console.log(`[wallet/starknet] Creating new Starknet wallet for user ${user_id}`);
-    const newWallet = await privy.wallets().create({
+    const newWallet = await getPrivy().wallets().create({
       chain_type: 'starknet',
     });
 

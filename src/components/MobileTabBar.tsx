@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LineChart, PieChart, PlusCircle } from 'lucide-react';
+import { Home, LineChart, PieChart, PlusCircle, Trophy } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
 
 export function MobileTabBar() {
@@ -11,7 +11,8 @@ export function MobileTabBar() {
 
     const navItems = [
         { label: 'Home', href: '/', icon: Home },
-        { label: 'Markets', href: '/markets', icon: LineChart }, // Could also be the home page, adapt based on flow
+        { label: 'Markets', href: '/markets', icon: LineChart },
+        { label: 'Leaders', href: '/leaderboards', icon: Trophy },
     ];
 
     if (authenticated) {

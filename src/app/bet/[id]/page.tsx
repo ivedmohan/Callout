@@ -10,6 +10,7 @@ import { joinBet, settleBet, claimPayout, getBet, getParticipants } from '@/lib/
 import type { Bet, BetOption, Participant } from '@/types';
 import { EXPLORER_URL } from '@/lib/constants';
 import { CheckCircle2, Clock, CircleDot, Trophy, Copy, Coins, Users, AlertCircle } from 'lucide-react';
+import { ProbabilityBar } from '@/components/ProbabilityBar';
 
 export default function BetPage() {
   const params = useParams();
@@ -77,6 +78,20 @@ export default function BetPage() {
   const optionACounts = participants.filter((p) => p.option === 'A').length;
   const optionBCounts = participants.filter((p) => p.option === 'B').length;
 
+  const getOptionColor = (text: string, isOptionA: boolean): 'emerald' | 'rose' => {
+    const lower = text.trim().toLowerCase();
+    if (['no', 'n', 'false'].includes(lower)) return 'rose';
+    if (['yes', 'y', 'true'].includes(lower)) return 'emerald';
+    return isOptionA ? 'emerald' : 'rose';
+  };
+
+  const colorA = getOptionColor(bet.optionA, true);
+  const colorB = getOptionColor(bet.optionB, false);
+
+  const isDefaultOptions =
+    ['yes', 'no', 'y', 'n'].includes(bet.optionA.trim().toLowerCase()) &&
+    ['yes', 'no', 'y', 'n'].includes(bet.optionB.trim().toLowerCase());
+
   const handleJoin = async () => {
     if (!wallet || !selectedOption) return;
     setIsJoining(true);
@@ -136,10 +151,10 @@ export default function BetPage() {
         <div className="mb-3 flex items-center gap-2">
           <span
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wider ${bet.settled
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                : isExpired
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              : isExpired
+                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
               }`}
           >
             {bet.settled ? <><CheckCircle2 className="h-3 w-3" /> Settled</> : isExpired ? <><Clock className="h-3 w-3" /> Expired</> : <><CircleDot className="h-3 w-3" /> Live</>}
@@ -151,10 +166,20 @@ export default function BetPage() {
         </p>
       </div>
 
+      {/* Probability Bar */}
+      <div className="mb-6 rounded-2xl border border-zinc-800/60 bg-[#0f1423] p-5">
+        <ProbabilityBar
+          optionACount={optionACounts}
+          optionBCount={optionBCounts}
+          optionALabel={bet.optionA}
+          optionBLabel={bet.optionB}
+        />
+      </div>
+
       {/* Options & Voting */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <OptionCard
-          label="Yes"
+          label={isDefaultOptions ? 'Yes' : 'A'}
           name={bet.optionA}
           count={optionACounts}
           total={participants.length}
@@ -162,10 +187,10 @@ export default function BetPage() {
           isSelected={selectedOption === 'A'}
           onClick={() => canJoin && setSelectedOption('A')}
           disabled={!canJoin}
-          color="emerald"
+          color={colorA}
         />
         <OptionCard
-          label="No"
+          label={isDefaultOptions ? 'No' : 'B'}
           name={bet.optionB}
           count={optionBCounts}
           total={participants.length}
@@ -173,7 +198,7 @@ export default function BetPage() {
           isSelected={selectedOption === 'B'}
           onClick={() => canJoin && setSelectedOption('B')}
           disabled={!canJoin}
-          color="rose"
+          color={colorB}
         />
       </div>
 
@@ -332,10 +357,10 @@ function OptionCard({
       onClick={onClick}
       disabled={disabled}
       className={`relative overflow-hidden rounded-2xl border p-5 text-left transition-all ${isWinner
-          ? `border-${color}-500 bg-${color}-500/10 shadow-lg shadow-${color}-500/10`
-          : isSelected
-            ? `${colorClasses.border} ${colorClasses.bg} shadow-md shadow-${color}-500/5`
-            : 'border-zinc-800/60 bg-[#13192b] hover:border-zinc-700 hover:bg-[#1a2136]'
+        ? `border-${color}-500 bg-${color}-500/10 shadow-lg shadow-${color}-500/10`
+        : isSelected
+          ? `${colorClasses.border} ${colorClasses.bg} shadow-md shadow-${color}-500/5`
+          : 'border-zinc-800/60 bg-[#13192b] hover:border-zinc-700 hover:bg-[#1a2136]'
         } ${disabled && !isWinner ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${!disabled && !isSelected && 'hover:-translate-y-0.5'}`}
     >
       {isWinner && (

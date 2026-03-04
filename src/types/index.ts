@@ -16,6 +16,9 @@ export interface Bet {
   winner: BetOption | null;
   totalPot: string;
   participantCount: number;
+  /** Per-option vote counts (populated when participants are loaded) */
+  optionACount?: number;
+  optionBCount?: number;
 }
 
 export interface Participant {

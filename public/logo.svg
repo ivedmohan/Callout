@@ -1,4 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-  <circle cx="20" cy="20" r="18" fill="#f97316" />
-  <text x="20" y="27" text-anchor="middle" font-size="22" font-weight="bold" fill="white" font-family="system-ui">🔥</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background: rounded square -->
+  <rect width="512" height="512" rx="112" fill="#0a0f1e"/>
+
+  <!-- Outer ring — blue glow circle -->
+  <circle cx="256" cy="256" r="190" stroke="#3b82f6" stroke-width="16" fill="none" opacity="0.25"/>
+
+  <!-- Diamond / rhombus — the bet icon (two sides clashing) -->
+  <path d="M256 90 L400 256 L256 422 L112 256 Z" stroke="#3b82f6" stroke-width="10" fill="#3b82f6" fill-opacity="0.08"/>
+
+  <!-- Left half — emerald (Option A / Yes) -->
+  <path d="M256 130 L148 256 L256 382 Z" fill="#10b981" opacity="0.85"/>
+
+  <!-- Right half — rose (Option B / No) -->
+  <path d="M256 130 L364 256 L256 382 Z" fill="#f43f5e" opacity="0.85"/>
+
+  <!-- Center divider line -->
+  <line x1="256" y1="118" x2="256" y2="394" stroke="#0a0f1e" stroke-width="8"/>
+
+  <!-- Upward arrow (left side — bullish) -->
+  <polygon points="200,280 220,240 240,280" fill="white" opacity="0.9"/>
+  <rect x="222" y="280" width="16" height="40" rx="3" fill="white" opacity="0.9"/>
+  <!-- Extra arrowhead emphasis -->
+  <polygon points="200,280 220,232 240,280" fill="white" opacity="0"/>
+
+  <!-- Downward arrow (right side — bearish) -->
+  <polygon points="272,232 292,272 312,232" fill="white" opacity="0.9"/>
+  <rect x="274" y="192" width="16" height="40" rx="3" fill="white" opacity="0.9"/>
+
+  <!-- "C" letterform accent ring (subtle brand letter) -->
+  <path d="M310 160 A120 120 0 1 0 310 352" stroke="white" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.12"/>
 </svg>

@@ -11,10 +11,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrivyClient } from '@privy-io/node';
 
-const privy = new PrivyClient({
-  appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
-  appSecret: process.env.PRIVY_APP_SECRET!,
-});
+let _privy: PrivyClient | null = null;
+function getPrivy() {
+  if (!_privy) {
+    _privy = new PrivyClient({
+      appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
+      appSecret: process.env.PRIVY_APP_SECRET!,
+    });
+  }
+  return _privy;
+}
 
 export async function POST(req: NextRequest) {
   const { walletId, hash } = await req.json();
@@ -24,7 +30,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await privy.wallets().rawSign(walletId, {
+    const result = await getPrivy().wallets().rawSign(walletId, {
       params: { hash },
     });
 

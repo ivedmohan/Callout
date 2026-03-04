@@ -25,6 +25,17 @@ export default function CreateBetPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const getOptionColor = (text: string, isOptionA: boolean) => {
+    const lower = text.trim().toLowerCase();
+    if (['no', 'n', 'false'].includes(lower)) return 'rose';
+    if (['yes', 'y', 'true'].includes(lower)) return 'emerald';
+    return isOptionA ? 'emerald' : 'rose';
+  };
+
+  const colorA = getOptionColor(form.optionA || 'Yes', true);
+  const colorB = getOptionColor(form.optionB || 'No', false);
+
+
   const isFormValid =
     form.title.trim() &&
     form.optionA.trim() &&
@@ -101,36 +112,41 @@ export default function CreateBetPage() {
               name="title"
               value={form.title}
               onChange={(e: any) => handleChange(e)}
-              placeholder="e.g. Will Starknet reach $1 by EOY?"
-              maxLength={100}
+              placeholder="e.g. Will STRK reach $1 by EOY?"
+              maxLength={31}
               rows={2}
               className="w-full resize-none rounded-xl border border-zinc-800 bg-[#13192b] px-4 py-3 text-white placeholder-zinc-600 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
             />
+            <p className={`mt-1 text-right text-xs ${form.title.length > 28 ? 'text-orange-400' : 'text-zinc-600'}`}>
+              {form.title.length}/31
+            </p>
           </div>
 
           {/* Options */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-emerald-500">Option A</label>
+            <div className={`flex flex-col rounded-xl border border-${colorA}-500/20 bg-${colorA}-500/5 p-3 transition-colors`}>
+              <label className={`mb-2 block text-xs font-bold uppercase tracking-wider text-${colorA}-500`}>Option A</label>
               <input
                 name="optionA"
                 value={form.optionA}
                 onChange={handleChange}
                 placeholder="Yes"
-                maxLength={50}
-                className="w-full bg-transparent text-lg font-medium text-emerald-100 placeholder-emerald-800/50 outline-none"
+                maxLength={31}
+                className={`w-full bg-transparent text-lg font-medium text-${colorA}-100 placeholder-${colorA}-800/50 outline-none`}
               />
+              <span className={`mt-1 text-right text-xs ${form.optionA.length > 28 ? 'text-orange-400' : 'text-zinc-600'}`}>{form.optionA.length}/31</span>
             </div>
-            <div className="flex flex-col rounded-xl border border-rose-500/20 bg-rose-500/5 p-3">
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-rose-500">Option B</label>
+            <div className={`flex flex-col rounded-xl border border-${colorB}-500/20 bg-${colorB}-500/5 p-3 transition-colors`}>
+              <label className={`mb-2 block text-xs font-bold uppercase tracking-wider text-${colorB}-500`}>Option B</label>
               <input
                 name="optionB"
                 value={form.optionB}
                 onChange={handleChange}
                 placeholder="No"
-                maxLength={50}
-                className="w-full bg-transparent text-lg font-medium text-rose-100 placeholder-rose-800/50 outline-none"
+                maxLength={31}
+                className={`w-full bg-transparent text-lg font-medium text-${colorB}-100 placeholder-${colorB}-800/50 outline-none`}
               />
+              <span className={`mt-1 text-right text-xs ${form.optionB.length > 28 ? 'text-orange-400' : 'text-zinc-600'}`}>{form.optionB.length}/31</span>
             </div>
           </div>
 

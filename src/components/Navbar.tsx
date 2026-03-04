@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useWallet } from '@/hooks/useWallet';
+import { CalloutLogo } from './CalloutLogo';
+import { LineChart, Trophy, PlusCircle, PieChart } from 'lucide-react';
 
 export function Navbar() {
   const { authenticated, address, isConnected, isLoading, balance, connectWallet, disconnectWallet } =
@@ -24,17 +25,23 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <Image src="/logo.png" alt="Callout Logo" width={32} height={32} className="rounded-xl shadow-lg shadow-blue-500/20" />
+          <CalloutLogo size={32} className="rounded-xl shadow-lg shadow-blue-500/20" />
           <span className="text-xl font-bold tracking-tight text-white">Callout</span>
         </Link>
 
         {/* Nav Links */}
         <div className="hidden items-center gap-6 sm:flex">
-          <Link href="/create" className="text-sm text-zinc-400 transition hover:text-white">
-            Create Bet
+          <Link href="/markets" className="text-sm text-zinc-400 flex items-center gap-1.5 transition hover:text-white">
+            <LineChart className="h-4 w-4" /> Markets
           </Link>
-          <Link href="/dashboard" className="text-sm text-zinc-400 transition hover:text-white">
-            My Bets
+          <Link href="/leaderboards" className="text-sm text-zinc-400 flex items-center gap-1.5 transition hover:text-white">
+            <Trophy className="h-4 w-4" /> Leaderboards
+          </Link>
+          <Link href="/create" className="text-sm text-zinc-400 flex items-center gap-1.5 transition hover:text-white">
+            <PlusCircle className="h-4 w-4" /> Create Bet
+          </Link>
+          <Link href="/dashboard" className="text-sm text-zinc-400 flex items-center gap-1.5 transition hover:text-white">
+            <PieChart className="h-4 w-4" /> Portfolio
           </Link>
         </div>
 

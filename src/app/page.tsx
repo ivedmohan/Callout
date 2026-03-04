@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/Button';
+import { CalloutLogo } from '@/components/CalloutLogo';
 import { useWallet } from '@/hooks/useWallet';
 import { Target, BarChart2, Rocket, Key, Fuel, Coins, TrendingUp } from 'lucide-react';
 import { BetCard } from '@/components/BetCard';
@@ -20,8 +20,12 @@ export default function HomePage() {
     async function load() {
       try {
         const data = await getAllBets();
-        // sort by newest
-        setBets(data.reverse());
+        // sort by newest, only show live bets
+        const liveBets = data.filter((b) => {
+          const isExpired = Date.now() > b.deadline * 1000;
+          return !b.settled && !isExpired;
+        });
+        setBets(liveBets.reverse());
       } catch (err) {
         console.error(err);
       } finally {
@@ -35,7 +39,7 @@ export default function HomePage() {
     <div className="flex min-h-[80vh] flex-col items-center justify-center text-center">
       {/* Hero */}
       <div className="mb-12 flex flex-col items-center">
-        <Image src="/logo.png" alt="Callout Logo" width={96} height={96} className="mb-6 rounded-[2rem] shadow-2xl shadow-blue-500/30" />
+        <CalloutLogo size={96} className="mb-6 rounded-[2rem] shadow-2xl shadow-blue-500/30" />
         <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-white sm:text-6xl">
           Call Out Your Friends
         </h1>

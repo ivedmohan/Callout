@@ -6,7 +6,7 @@ import { Button } from '@/components/Button';
 import { BetCard } from '@/components/BetCard';
 import { LoadingSpinner, PageLoading, EmptyState } from '@/components/LoadingSpinner';
 import { useWallet } from '@/hooks/useWallet';
-import { getAllBets } from '@/lib/contract';
+import { getAllBetsWithCounts } from '@/lib/contract';
 import type { Bet } from '@/types';
 import { Target, Activity, CheckCircle2, BarChart2, Coins, Rocket } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export default function DashboardPage() {
     async function loadBets() {
       setLoading(true);
       try {
-        const allBets = await getAllBets();
+        const allBets = await getAllBetsWithCounts();
         if (!cancelled) setBets(allBets);
       } catch (err) {
         console.error('Failed to load bets:', err);

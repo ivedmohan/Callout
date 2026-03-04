@@ -53,7 +53,7 @@ export function Providers({ children }: ProvidersProps) {
         loginMethods: ['email', 'google'],
         appearance: {
           theme: 'dark',
-          accentColor: '#f97316',
+          accentColor: '#3b82f6',
           logo: '/logo.svg',
         },
       }}
