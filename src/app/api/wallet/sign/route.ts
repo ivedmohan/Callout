@@ -3,6 +3,9 @@
  *
  * Signs a transaction hash using Privy's rawSign.
  * Called by the Starkzap SDK's PrivySigner during tx execution.
+ *
+ * Wallets are app-owned (no user owner), so the app API key
+ * is sufficient for signing — no user JWT needed.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

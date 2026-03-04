@@ -26,7 +26,7 @@ export function BetCard({ bet }: BetCardProps) {
 
   return (
     <Link href={`/bet/${bet.id}`}>
-      <div className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-blue-500/50">
+      <div className="group relative flex flex-col h-full overflow-hidden rounded-2xl border border-zinc-800/60 bg-[#0f1423] p-5 transition-all hover:border-blue-500/50 hover:bg-[#13192b] hover:shadow-xl hover:shadow-blue-500/10">
         <div className="mb-4 flex items-start justify-between gap-4">
           <h3 className="line-clamp-2 text-lg font-semibold tracking-tight text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">
             {bet.title}
@@ -36,29 +36,29 @@ export function BetCard({ bet }: BetCardProps) {
           </span>
         </div>
 
-        <div className="mb-5 flex flex-col gap-2">
-          <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800/60 dark:bg-zinc-900/50">
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="mt-2 mb-4 grid grid-cols-2 gap-3">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 transition-colors hover:bg-emerald-500/20 cursor-pointer">
+            <span className="text-xs font-semibold text-emerald-500 mb-1 uppercase tracking-wider">Yes</span>
+            <span className="text-sm font-medium text-emerald-100 text-center line-clamp-2">
               {bet.optionA}
             </span>
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Yes</span>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800/60 dark:bg-zinc-900/50">
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 transition-colors hover:bg-rose-500/20 cursor-pointer">
+            <span className="text-xs font-semibold text-rose-500 mb-1 uppercase tracking-wider">No</span>
+            <span className="text-sm font-medium text-rose-100 text-center line-clamp-2">
               {bet.optionB}
             </span>
-            <span className="text-sm font-semibold text-rose-600 dark:text-rose-400">No</span>
           </div>
         </div>
 
-        <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-4 text-xs font-medium text-zinc-500 dark:border-zinc-800/60 dark:text-zinc-400">
+        <div className="mt-auto flex items-center justify-between border-t border-zinc-800/60 pt-4 text-xs font-medium text-zinc-500">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 hover:text-zinc-700 dark:hover:text-zinc-300">
-              <Coins className="h-4 w-4 text-blue-500" />
-              <span>{bet.stakeAmount} STRK</span>
+            <div className="flex items-center gap-1.5 text-zinc-400">
+              <Coins className="h-4 w-4 text-blue-400" />
+              <span>{bet.totalPot || bet.stakeAmount} STRK Vol</span>
             </div>
-            <div className="flex items-center gap-1.5 hover:text-zinc-700 dark:hover:text-zinc-300">
-              <Users className="h-4 w-4 text-zinc-400" />
+            <div className="flex items-center gap-1.5 text-zinc-400">
+              <Users className="h-4 w-4" />
               <span>{bet.participantCount}</span>
             </div>
           </div>

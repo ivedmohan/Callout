@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  /* Starknet Inspired Dark Theme */
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  --starknet-blue: #0C0C4F;
+  --starknet-cyan: #25c2f5;
+  --starknet-purple: #c084fc;
 }
 
 @theme inline {
@@ -10,6 +14,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-starknet-blue: var(--starknet-blue);
+  --color-starknet-cyan: var(--starknet-cyan);
+  --color-starknet-purple: var(--starknet-purple);
 }
 
 body {
@@ -23,14 +30,14 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: #0f172a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #1e293b;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #334155;
 }
 
 /* Toast overrides */

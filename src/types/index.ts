@@ -40,6 +40,7 @@ export interface SignerContext {
   walletId: string;
   publicKey: string;
   serverUrl: string;
+  headers?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>);
 }
 
 // ─── UI Types ───

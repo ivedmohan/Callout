@@ -68,9 +68,9 @@ export default function CreateBetPage() {
   return (
     <div className="mx-auto max-w-lg">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Create a Bet</h1>
-        <p className="mt-2 text-zinc-500">
-          Set up a prediction market. Share the link with friends.
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Create Market</h1>
+        <p className="text-zinc-400">
+          Set up a prediction market. Share the link with friends to bet.
         </p>
       </div>
 
@@ -84,59 +84,60 @@ export default function CreateBetPage() {
           ) : (
             <>
               <p className="mb-4 text-zinc-400">Sign in to create a bet</p>
-              <Button onClick={connectWallet}>
+              <Button onClick={connectWallet} className="w-full mt-2 gap-2" size="lg">
                 Sign In
               </Button>
             </>
           )}
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-zinc-800/60 bg-[#0f1423] p-5 sm:p-8 shadow-2xl">
           {/* Title */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              What are you betting on?
+            <label className="mb-2 block text-sm font-semibold text-zinc-300">
+              Market Question
             </label>
-            <input
+            <textarea
               name="title"
               value={form.title}
-              onChange={handleChange}
-              placeholder="e.g. Will it rain tomorrow?"
+              onChange={(e: any) => handleChange(e)}
+              placeholder="e.g. Will Starknet reach $1 by EOY?"
               maxLength={100}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 outline-none transition focus:border-orange-500"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-zinc-800 bg-[#13192b] px-4 py-3 text-white placeholder-zinc-600 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
             />
           </div>
 
           {/* Options */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-blue-400">Option A</label>
+            <div className="flex flex-col rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-emerald-500">Option A</label>
               <input
                 name="optionA"
                 value={form.optionA}
                 onChange={handleChange}
-                placeholder="e.g. Yes"
+                placeholder="Yes"
                 maxLength={50}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 outline-none transition focus:border-blue-500"
+                className="w-full bg-transparent text-lg font-medium text-emerald-100 placeholder-emerald-800/50 outline-none"
               />
             </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-purple-400">Option B</label>
+            <div className="flex flex-col rounded-xl border border-rose-500/20 bg-rose-500/5 p-3">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-rose-500">Option B</label>
               <input
                 name="optionB"
                 value={form.optionB}
                 onChange={handleChange}
-                placeholder="e.g. No"
+                placeholder="No"
                 maxLength={50}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 outline-none transition focus:border-purple-500"
+                className="w-full bg-transparent text-lg font-medium text-rose-100 placeholder-rose-800/50 outline-none"
               />
             </div>
           </div>
 
           {/* Stake Amount */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Stake Amount (STRK per person)
+            <label className="mb-2 block text-sm font-semibold text-zinc-300">
+              Stake Amount (per person)
             </label>
             <div className="relative">
               <input
@@ -147,9 +148,9 @@ export default function CreateBetPage() {
                 value={form.stakeAmount}
                 onChange={handleChange}
                 placeholder="10"
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 pr-16 text-white placeholder-zinc-600 outline-none transition focus:border-orange-500"
+                className="w-full rounded-xl border border-zinc-800 bg-[#13192b] px-4 py-3 pr-16 text-white placeholder-zinc-600 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-blue-400">
                 STRK
               </span>
             </div>
@@ -157,14 +158,14 @@ export default function CreateBetPage() {
 
           {/* Deadline */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">Deadline</label>
+            <label className="mb-2 block text-sm font-semibold text-zinc-300">Market Deadline</label>
             <input
               name="deadline"
               type="datetime-local"
               min={minDate}
               value={form.deadline}
               onChange={handleChange}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white outline-none transition focus:border-orange-500 [color-scheme:dark]"
+              className="w-full rounded-xl border border-zinc-800 bg-[#13192b] px-4 py-3 text-white outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 [color-scheme:dark]"
             />
           </div>
 

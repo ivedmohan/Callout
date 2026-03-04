@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Navbar } from '@/components/Navbar';
+import { MobileTabBar } from '@/components/MobileTabBar';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,7 +36,8 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Navbar />
-          <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <main className="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">{children}</main>
+          <MobileTabBar />
         </Providers>
       </body>
     </html>

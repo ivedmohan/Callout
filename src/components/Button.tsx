@@ -14,7 +14,7 @@ interface ButtonProps {
 }
 
 const variants = {
-  primary: 'bg-orange-500 text-white hover:bg-orange-600 disabled:bg-orange-500/50',
+  primary: 'bg-blue-600 text-white hover:bg-blue-500 disabled:bg-blue-600/50 shadow-lg shadow-blue-500/20',
   secondary: 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:bg-zinc-800/50',
   danger: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-600/50',
   ghost: 'bg-transparent text-zinc-400 hover:text-white hover:bg-zinc-800/50',
