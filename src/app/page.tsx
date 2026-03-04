@@ -15,11 +15,29 @@ export default function HomePage() {
   const { authenticated, connectWallet, isLoading: walletLoading } = useWallet();
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalVolume: 0, totalMarkets: 0, totalTraders: 0 });
 
   useEffect(() => {
     async function load() {
       try {
         const data = await getAllBetsWithCounts();
+
+        // Calculate global stats
+        let volume = 0;
+        let traders = new Set<string>();
+        data.forEach(b => {
+          volume += Number(b.totalPot);
+          // In a real app we'd fetch actual unique participants globally here
+          // For speed on the frontend, we'll estimate traders uniquely by adding creator
+          traders.add(b.creator);
+        });
+
+        setStats({
+          totalVolume: volume,
+          totalMarkets: data.length,
+          totalTraders: data.reduce((acc, b) => acc + b.participantCount, 0) // estimate total participation
+        });
+
         // sort by newest, only show live bets
         const liveBets = data.filter((b) => {
           const isExpired = Date.now() > b.deadline * 1000;
@@ -69,6 +87,31 @@ export default function HomePage() {
             {walletLoading ? 'Connecting…' : <><Rocket className="h-5 w-5" /> Sign In & Start Trading</>}
           </Button>
         )}
+      </div>
+
+      {/* Global Stats */}
+      <div className="mt-16 grid grid-cols-3 gap-4 sm:gap-8 border-y border-zinc-800/60 py-8 w-full max-w-3xl px-4">
+        <div className="flex flex-col items-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Volume</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">
+              {stats.totalVolume.toFixed(0)}
+            </span>
+            <span className="text-sm font-bold text-emerald-500/50">STRK</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-center border-x border-zinc-800/60 px-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Markets</p>
+          <span className="text-3xl sm:text-4xl font-extrabold text-white">
+            {stats.totalMarkets}
+          </span>
+        </div>
+        <div className="flex flex-col items-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Trades</p>
+          <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200">
+            {stats.totalTraders}
+          </span>
+        </div>
       </div>
 
       {/* Markets Feed */}

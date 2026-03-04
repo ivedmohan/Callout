@@ -12,6 +12,8 @@ import { EXPLORER_URL } from '@/lib/constants';
 import { friendlyError } from '@/lib/errors';
 import { CheckCircle2, Clock, CircleDot, Trophy, Copy, Coins, Users, AlertCircle } from 'lucide-react';
 import { ProbabilityBar } from '@/components/ProbabilityBar';
+import { DonutChart } from '@/components/DonutChart';
+import { EarningsPotential } from '@/components/EarningsPotential';
 
 export default function BetPage() {
   const params = useParams();
@@ -173,14 +175,27 @@ export default function BetPage() {
         </p>
       </div>
 
-      {/* Probability Bar */}
+      {/* Probability Bar + Donut Chart */}
       <div className="mb-6 rounded-2xl border border-zinc-800/60 bg-[#0f1423] p-5">
-        <ProbabilityBar
-          optionACount={optionACounts}
-          optionBCount={optionBCounts}
-          optionALabel={labelA}
-          optionBLabel={labelB}
-        />
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex-1 w-full">
+            <ProbabilityBar
+              optionACount={optionACounts}
+              optionBCount={optionBCounts}
+              optionALabel={labelA}
+              optionBLabel={labelB}
+            />
+          </div>
+          <div className="shrink-0">
+            <DonutChart
+              optionACount={optionACounts}
+              optionBCount={optionBCounts}
+              optionALabel={labelA}
+              optionBLabel={labelB}
+              size={140}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Options & Voting */}
@@ -213,6 +228,21 @@ export default function BetPage() {
         <StatBox label="Stake" value={`${bet.stakeAmount} STRK`} icon={<Coins className="h-4 w-4 text-blue-400" />} />
         <StatBox label="Total Pot" value={`${bet.totalPot} STRK`} icon={<Coins className="h-4 w-4 text-emerald-400" />} />
         <StatBox label="Traders" value={String(bet.participantCount)} icon={<Users className="h-4 w-4 text-zinc-400" />} />
+      </div>
+
+      {/* Earnings Potential */}
+      <div className="mb-6">
+        <EarningsPotential
+          stakeAmount={bet.stakeAmount}
+          totalPot={bet.totalPot}
+          optionACount={optionACounts}
+          optionBCount={optionBCounts}
+          optionALabel={labelA}
+          optionBLabel={labelB}
+          selectedOption={selectedOption}
+          hasJoined={!!hasJoined}
+          settled={bet.settled}
+        />
       </div>
 
       {/* Actions / Order Slip */}
