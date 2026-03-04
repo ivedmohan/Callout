@@ -7,13 +7,12 @@
  *
  * Wallets are app-owned (no `owner`) so rawSign works with just the
  * app API key — no per-user JWT required for signing.
- * We track user_id -> wallet mapping in a local JSON file (MVP).
+ * We store the wallet mapping in Privy's user custom_metadata
+ * so it works on serverless (Vercel) with no filesystem.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrivyClient } from '@privy-io/node';
-import fs from 'fs';
-import path from 'path';
 
 let _privy: PrivyClient | null = null;
 function getPrivy() {
@@ -26,25 +25,7 @@ function getPrivy() {
   return _privy;
 }
 
-// Simple file-based wallet mapping (MVP — use a database in production)
-const WALLET_MAP_PATH = path.join(process.cwd(), '.wallet-map.json');
-
 type WalletData = { id: string; address: string; publicKey: string };
-
-function loadWalletMap(): Record<string, WalletData> {
-  try {
-    if (fs.existsSync(WALLET_MAP_PATH)) {
-      return JSON.parse(fs.readFileSync(WALLET_MAP_PATH, 'utf-8'));
-    }
-  } catch (err: any) {
-    console.error(`[wallet/starknet] Failed to load wallet map:`, err?.message);
-  }
-  return {};
-}
-
-function saveWalletMap(map: Record<string, WalletData>) {
-  fs.writeFileSync(WALLET_MAP_PATH, JSON.stringify(map, null, 2));
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,18 +34,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
     }
 
-    // 1. Verify the access token and extract the user ID
-    const { user_id } = await getPrivy().utils().auth().verifyAccessToken(accessToken);
+    const privy = getPrivy();
 
-    // 2. Check our local mapping first
-    const walletMap = loadWalletMap();
-    if (walletMap[user_id]) {
-      return NextResponse.json({ wallet: walletMap[user_id] });
+    // 1. Verify the access token and extract the user ID
+    const { user_id } = await privy.utils().auth().verifyAccessToken(accessToken);
+
+    // 2. Check if the user already has a wallet stored in their custom_metadata
+    const user = await privy.users.get(user_id);
+    const existing = user.custom_metadata as { starknet_wallet?: WalletData } | null;
+
+    if (existing?.starknet_wallet) {
+      console.log(`[wallet/starknet] Found existing wallet for user ${user_id}`);
+      return NextResponse.json({ wallet: existing.starknet_wallet });
     }
 
-    // 3. No mapping — create a new app-owned wallet
+    // 3. No wallet yet — create a new app-owned wallet
     console.log(`[wallet/starknet] Creating new Starknet wallet for user ${user_id}`);
-    const newWallet = await getPrivy().wallets().create({
+    const newWallet = await privy.wallets().create({
       chain_type: 'starknet',
     });
 
@@ -74,10 +60,15 @@ export async function POST(req: NextRequest) {
       publicKey: newWallet.public_key || '',
     };
 
-    // Save the mapping
-    walletMap[user_id] = walletData;
-    saveWalletMap(walletMap);
+    // 4. Store the mapping in the user's custom_metadata
+    await privy.users.setCustomMetadata(user_id, {
+      custom_metadata: {
+        ...((user.custom_metadata as Record<string, unknown>) || {}),
+        starknet_wallet: walletData,
+      },
+    });
 
+    console.log(`[wallet/starknet] Wallet created and saved for user ${user_id}: ${walletData.address}`);
     return NextResponse.json({ wallet: walletData });
   } catch (error: any) {
     console.error('Create/get wallet error:', error?.message);
