@@ -40,12 +40,17 @@ export async function POST(req: NextRequest) {
     const { user_id } = await privy.utils().auth().verifyAccessToken(accessToken);
 
     // 2. Check if the user already has a wallet stored in their custom_metadata
-    const user = await privy.users.get(user_id);
-    const existing = user.custom_metadata as { starknet_wallet?: WalletData } | null;
+    const user = await privy.users()._get(user_id);
+    const meta = user.custom_metadata as Record<string, string> | null;
 
-    if (existing?.starknet_wallet) {
-      console.log(`[wallet/starknet] Found existing wallet for user ${user_id}`);
-      return NextResponse.json({ wallet: existing.starknet_wallet });
+    if (meta?.starknet_wallet) {
+      try {
+        const walletData: WalletData = JSON.parse(meta.starknet_wallet);
+        console.log(`[wallet/starknet] Found existing wallet for user ${user_id}`);
+        return NextResponse.json({ wallet: walletData });
+      } catch {
+        // Corrupted metadata, fall through to create new wallet
+      }
     }
 
     // 3. No wallet yet — create a new app-owned wallet
@@ -60,11 +65,11 @@ export async function POST(req: NextRequest) {
       publicKey: newWallet.public_key || '',
     };
 
-    // 4. Store the mapping in the user's custom_metadata
-    await privy.users.setCustomMetadata(user_id, {
+    // 4. Store the mapping in the user's custom_metadata (values must be primitives)
+    await privy.users().setCustomMetadata(user_id, {
       custom_metadata: {
-        ...((user.custom_metadata as Record<string, unknown>) || {}),
-        starknet_wallet: walletData,
+        ...((meta as Record<string, string>) || {}),
+        starknet_wallet: JSON.stringify(walletData),
       },
     });
 
