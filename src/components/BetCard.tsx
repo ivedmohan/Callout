@@ -25,11 +25,15 @@ export function BetCard({ bet }: BetCardProps) {
     minute: '2-digit',
   });
 
-  // If options are just "Yes"/"No" (or similar), don't repeat them — show only the label.
-  // If they're custom names, show only the names without Yes/No.
-  const isDefaultOptions =
-    ['yes', 'no', 'y', 'n'].includes(bet.optionA.trim().toLowerCase()) &&
-    ['yes', 'no', 'y', 'n'].includes(bet.optionB.trim().toLowerCase());
+  const formatOptionLabel = (text: string) => {
+    const lower = text.trim().toLowerCase();
+    if (['y', 'yes', 'true'].includes(lower)) return 'Yes';
+    if (['n', 'no', 'false'].includes(lower)) return 'No';
+    return text;
+  };
+
+  const labelA = formatOptionLabel(bet.optionA);
+  const labelB = formatOptionLabel(bet.optionB);
 
   const getOptionColor = (text: string, isOptionA: boolean) => {
     const lower = text.trim().toLowerCase();
@@ -69,17 +73,17 @@ export function BetCard({ bet }: BetCardProps) {
           <ProbabilityBar
             optionACount={bet.optionACount ?? 0}
             optionBCount={bet.optionBCount ?? 0}
-            optionALabel={isDefaultOptions ? 'Yes' : bet.optionA}
-            optionBLabel={isDefaultOptions ? 'No' : bet.optionB}
+            optionALabel={labelA}
+            optionBLabel={labelB}
           />
         </div>
 
         <div className="mt-2 mb-4 grid grid-cols-2 gap-2">
           <div className={`flex flex-col items-center justify-center rounded-lg bg-${colorA}-500/10 border border-${colorA}-500/20 py-2.5 transition-colors hover:bg-${colorA}-500/20 cursor-pointer`}>
-            <span className={`text-sm font-semibold text-${colorA}-500 tracking-wide`}>{isDefaultOptions ? 'Yes' : bet.optionA}</span>
+            <span className={`text-sm font-semibold text-${colorA}-500 tracking-wide`}>{labelA}</span>
           </div>
           <div className={`flex flex-col items-center justify-center rounded-lg bg-${colorB}-500/10 border border-${colorB}-500/20 py-2.5 transition-colors hover:bg-${colorB}-500/20 cursor-pointer`}>
-            <span className={`text-sm font-semibold text-${colorB}-500 tracking-wide`}>{isDefaultOptions ? 'No' : bet.optionB}</span>
+            <span className={`text-sm font-semibold text-${colorB}-500 tracking-wide`}>{labelB}</span>
           </div>
         </div>
 

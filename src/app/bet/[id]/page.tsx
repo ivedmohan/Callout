@@ -78,6 +78,16 @@ export default function BetPage() {
   const optionACounts = participants.filter((p) => p.option === 'A').length;
   const optionBCounts = participants.filter((p) => p.option === 'B').length;
 
+  const formatOptionLabel = (text: string) => {
+    const lower = text.trim().toLowerCase();
+    if (['y', 'yes', 'true'].includes(lower)) return 'Yes';
+    if (['n', 'no', 'false'].includes(lower)) return 'No';
+    return text;
+  };
+
+  const labelA = formatOptionLabel(bet.optionA);
+  const labelB = formatOptionLabel(bet.optionB);
+
   const getOptionColor = (text: string, isOptionA: boolean): 'emerald' | 'rose' => {
     const lower = text.trim().toLowerCase();
     if (['no', 'n', 'false'].includes(lower)) return 'rose';
@@ -87,10 +97,6 @@ export default function BetPage() {
 
   const colorA = getOptionColor(bet.optionA, true);
   const colorB = getOptionColor(bet.optionB, false);
-
-  const isDefaultOptions =
-    ['yes', 'no', 'y', 'n'].includes(bet.optionA.trim().toLowerCase()) &&
-    ['yes', 'no', 'y', 'n'].includes(bet.optionB.trim().toLowerCase());
 
   const handleJoin = async () => {
     if (!wallet || !selectedOption) return;
@@ -171,16 +177,16 @@ export default function BetPage() {
         <ProbabilityBar
           optionACount={optionACounts}
           optionBCount={optionBCounts}
-          optionALabel={bet.optionA}
-          optionBLabel={bet.optionB}
+          optionALabel={labelA}
+          optionBLabel={labelB}
         />
       </div>
 
       {/* Options & Voting */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <OptionCard
-          label={isDefaultOptions ? 'Yes' : 'A'}
-          name={bet.optionA}
+          label="Option A"
+          name={labelA}
           count={optionACounts}
           total={participants.length}
           isWinner={bet.settled && bet.winner === 'A'}
@@ -190,8 +196,8 @@ export default function BetPage() {
           color={colorA}
         />
         <OptionCard
-          label={isDefaultOptions ? 'No' : 'B'}
-          name={bet.optionB}
+          label="Option B"
+          name={labelB}
           count={optionBCounts}
           total={participants.length}
           isWinner={bet.settled && bet.winner === 'B'}
@@ -232,7 +238,7 @@ export default function BetPage() {
               </span>
             ) : (
               <span className="flex justify-between items-center w-full px-2">
-                <span>Buy {selectedOption === 'A' ? 'Yes' : 'No'}</span>
+                <span>Buy {selectedOption === 'A' ? labelA : labelB}</span>
                 <span className="font-mono">{bet.stakeAmount} STRK</span>
               </span>
             )}
@@ -247,7 +253,7 @@ export default function BetPage() {
 
         {hasJoined && !bet.settled && (
           <div className="flex items-center justify-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-400">
-            <CheckCircle2 className="h-4 w-4" /> Position: {myParticipation?.option === 'A' ? 'Yes' : 'No'}
+            <CheckCircle2 className="h-4 w-4" /> Position: {myParticipation?.option === 'A' ? labelA : labelB}
           </div>
         )}
 
@@ -310,10 +316,10 @@ export default function BetPage() {
               <div key={i} className="flex items-center justify-between rounded-lg bg-zinc-800/50 px-3 py-2">
                 <span className="font-mono text-xs text-zinc-400">{p.address}</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${p.option === 'A' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${p.option === 'A' ? `bg-${colorA}-500/10 text-${colorA}-400` : `bg-${colorB}-500/10 text-${colorB}-400`
                     }`}
                 >
-                  {p.option === 'A' ? 'Yes' : 'No'}
+                  {p.option === 'A' ? labelA : labelB}
                 </span>
               </div>
             ))}
