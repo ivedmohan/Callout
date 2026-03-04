@@ -292,6 +292,35 @@ export async function getAllBetsWithCounts(): Promise<Bet[]> {
   return bets;
 }
 
+/**
+ * Fetches all bets the specified user has either created or participated in.
+ */
+export async function getUserBets(userAddress: string): Promise<Bet[]> {
+  const count = await getBetCount();
+  const bets: Bet[] = [];
+  if (!userAddress) return bets;
+
+  const normalizedUser = userAddress.toLowerCase().replace(/^0x0*/, '');
+
+  for (let i = 1; i <= count; i++) {
+    const bet = await getBet(String(i));
+    if (bet) {
+      const creatorNormalized = bet.creator.toLowerCase().replace(/^0x0*/, '');
+      const participants = await getParticipants(String(i), bet.participantCount);
+
+      const isCreator = creatorNormalized === normalizedUser;
+      const isParticipant = participants.some(p => p.address.toLowerCase().replace(/^0x0*/, '') === normalizedUser);
+
+      if (isCreator || isParticipant) {
+        bet.optionACount = participants.filter((p) => p.option === 'A').length;
+        bet.optionBCount = participants.filter((p) => p.option === 'B').length;
+        bets.push(bet);
+      }
+    }
+  }
+  return bets;
+}
+
 // ─── STRK balance read ───
 
 export async function getSTRKBalance(address: string): Promise<string> {

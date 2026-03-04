@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BetCard } from '@/components/BetCard';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
-import { getAllBets } from '@/lib/contract';
+import { getAllBetsWithCounts } from '@/lib/contract';
 import type { Bet } from '@/types';
 import { Target, Activity, CheckCircle2, BarChart2 } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ export default function MarketsPage() {
         async function loadBets() {
             setLoading(true);
             try {
-                const allBets = await getAllBets();
+                const allBets = await getAllBetsWithCounts();
                 if (!cancelled) setBets(allBets.reverse());
             } catch (err) {
                 console.error('Failed to load bets:', err);
@@ -60,8 +60,8 @@ export default function MarketsPage() {
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition ${filter === f
-                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                : 'text-zinc-500 border border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            : 'text-zinc-500 border border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'
                             }`}
                     >
                         {f === 'all' && <BarChart2 className="h-4 w-4" />}

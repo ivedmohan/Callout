@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useWallet } from '@/hooks/useWallet';
 import { createBet, getBetCount } from '@/lib/contract';
+import { friendlyError } from '@/lib/errors';
 import type { CreateBetForm } from '@/types';
 
 export default function CreateBetPage() {
@@ -67,7 +68,7 @@ export default function CreateBetPage() {
       router.push(`/bet/${betCount}`);
     } catch (err: any) {
       console.error('Create bet failed:', err);
-      toast.error(err.message || 'Failed to create bet');
+      toast.error(friendlyError(err));
     } finally {
       setIsSubmitting(false);
     }

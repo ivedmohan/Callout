@@ -6,7 +6,7 @@ import { Button } from '@/components/Button';
 import { BetCard } from '@/components/BetCard';
 import { LoadingSpinner, PageLoading, EmptyState } from '@/components/LoadingSpinner';
 import { useWallet } from '@/hooks/useWallet';
-import { getAllBetsWithCounts } from '@/lib/contract';
+import { getUserBets } from '@/lib/contract';
 import type { Bet } from '@/types';
 import { Target, Activity, CheckCircle2, BarChart2, Coins, Rocket } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'settled'>('all');
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
       setLoading(false);
       return;
     }
@@ -25,8 +25,8 @@ export default function DashboardPage() {
     async function loadBets() {
       setLoading(true);
       try {
-        const allBets = await getAllBetsWithCounts();
-        if (!cancelled) setBets(allBets);
+        const userBets = await getUserBets(address as string);
+        if (!cancelled) setBets(userBets.reverse());
       } catch (err) {
         console.error('Failed to load bets:', err);
       } finally {
@@ -90,8 +90,8 @@ export default function DashboardPage() {
             key={f}
             onClick={() => setFilter(f)}
             className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition ${filter === f
-                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                : 'text-zinc-500 border border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'
+              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+              : 'text-zinc-500 border border-transparent hover:bg-zinc-800/50 hover:text-zinc-300'
               }`}
           >
             {f === 'all' && <BarChart2 className="h-4 w-4" />}

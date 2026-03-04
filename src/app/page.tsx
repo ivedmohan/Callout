@@ -7,7 +7,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { Target, BarChart2, Rocket, Key, Fuel, Coins, TrendingUp } from 'lucide-react';
 import { BetCard } from '@/components/BetCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { getAllBets } from '@/lib/contract';
+import { getAllBetsWithCounts } from '@/lib/contract';
 import type { Bet } from '@/types';
 import { useState, useEffect } from 'react';
 
@@ -19,7 +19,7 @@ export default function HomePage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAllBets();
+        const data = await getAllBetsWithCounts();
         // sort by newest, only show live bets
         const liveBets = data.filter((b) => {
           const isExpired = Date.now() > b.deadline * 1000;

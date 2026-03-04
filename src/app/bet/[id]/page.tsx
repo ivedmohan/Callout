@@ -9,6 +9,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { joinBet, settleBet, claimPayout, getBet, getParticipants } from '@/lib/contract';
 import type { Bet, BetOption, Participant } from '@/types';
 import { EXPLORER_URL } from '@/lib/constants';
+import { friendlyError } from '@/lib/errors';
 import { CheckCircle2, Clock, CircleDot, Trophy, Copy, Coins, Users, AlertCircle } from 'lucide-react';
 import { ProbabilityBar } from '@/components/ProbabilityBar';
 
@@ -110,7 +111,7 @@ export default function BetPage() {
         { address: address!, option: selectedOption, hasClaimed: false },
       ]);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to join bet');
+      toast.error(friendlyError(err));
     } finally {
       setIsJoining(false);
     }
@@ -124,7 +125,7 @@ export default function BetPage() {
       toast.success('Bet settled! 🏆');
       setBet((prev) => (prev ? { ...prev, settled: true, winner } : null));
     } catch (err: any) {
-      toast.error(err.message || 'Failed to settle bet');
+      toast.error(friendlyError(err));
     } finally {
       setIsSettling(false);
     }
@@ -137,7 +138,7 @@ export default function BetPage() {
       await claimPayout(wallet, betId);
       toast.success('Payout claimed! 💰');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to claim payout');
+      toast.error(friendlyError(err));
     } finally {
       setIsClaiming(false);
     }
