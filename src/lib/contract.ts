@@ -164,52 +164,81 @@ function formatSTRK(weiAmount: bigint): string {
   return strk.toFixed(4).replace(/\.?0+$/, '') || '0';
 }
 
+// ─── Caching Layer ───
+const CACHE_TTL = 10000; // 10 seconds for live data
+const betCache = new Map<string, { data: Bet; ts: number; inFlight: Promise<Bet | null> | null }>();
+const participantsCache = new Map<string, { data: Participant[]; ts: number; inFlight: Promise<Participant[]> | null }>();
+const betCountCache = { data: 0, ts: 0, inFlight: null as Promise<number> | null };
+
 export async function getBet(betId: string): Promise<Bet | null> {
-  try {
-    const provider = getProvider();
-    const result = await provider.callContract({
-      contractAddress: CONTRACT_ADDRESS,
-      entrypoint: 'get_bet',
-      calldata: [betId],
-    });
+  const cached = betCache.get(betId);
+  const now = Date.now();
 
-    // Struct layout: id, creator, title, option_a, option_b,
-    //   stake_amount (u256: low, high), deadline, settled, winning_option,
-    //   total_pot (u256: low, high), participant_count
-    const r = result;
-    if (!r || r.length < 12) return null;
-
-    const id = BigInt(r[0]).toString();
-    if (id === '0') return null; // bet doesn't exist
-
-    const creator = r[1];
-    const title = feltToString(r[2]);
-    const optionA = feltToString(r[3]);
-    const optionB = feltToString(r[4]);
-    const stakeWei = u256FromPair(r[5], r[6]);
-    const deadline = Number(BigInt(r[7]));
-    const settled = BigInt(r[8]) !== BigInt(0);
-    const winningOption = Number(BigInt(r[9]));
-    const totalPotWei = u256FromPair(r[10], r[11]);
-    const participantCount = Number(BigInt(r[12]));
-
-    return {
-      id,
-      creator,
-      title: title || `Bet #${id}`,
-      optionA: optionA || 'Option A',
-      optionB: optionB || 'Option B',
-      stakeAmount: formatSTRK(stakeWei),
-      deadline,
-      settled,
-      winner: settled ? (winningOption === 0 ? 'A' : 'B') : null,
-      totalPot: formatSTRK(totalPotWei),
-      participantCount,
-    };
-  } catch (err) {
-    console.error('getBet failed:', err);
-    return null;
+  // Return cache if it is fresh OR if the bet is settled (settled bets never change)
+  if (cached && (cached.data.settled || now - cached.ts < CACHE_TTL)) {
+    return cached.data;
   }
+  // Return in-flight promise if deduplicating concurrent requests
+  if (cached?.inFlight) return cached.inFlight;
+
+  const promise = (async () => {
+    try {
+      const provider = getProvider();
+      const result = await provider.callContract({
+        contractAddress: CONTRACT_ADDRESS,
+        entrypoint: 'get_bet',
+        calldata: [betId],
+      });
+
+      // Struct layout: id, creator, title, option_a, option_b,
+      //   stake_amount (u256: low, high), deadline, settled, winning_option,
+      //   total_pot (u256: low, high), participant_count
+      const r = result;
+      if (!r || r.length < 12) return null;
+
+      const id = BigInt(r[0]).toString();
+      if (id === '0') return null; // bet doesn't exist
+
+      const creator = r[1];
+      const title = feltToString(r[2]);
+      const optionA = feltToString(r[3]);
+      const optionB = feltToString(r[4]);
+      const stakeWei = u256FromPair(r[5], r[6]);
+      const deadline = Number(BigInt(r[7]));
+      const settled = BigInt(r[8]) !== BigInt(0);
+      const winningOption = Number(BigInt(r[9]));
+      const totalPotWei = u256FromPair(r[10], r[11]);
+      const participantCount = Number(BigInt(r[12]));
+
+      const newBet: Bet = {
+        id,
+        creator,
+        title: title || `Bet #${id}`,
+        optionA: optionA || 'Option A',
+        optionB: optionB || 'Option B',
+        stakeAmount: formatSTRK(stakeWei),
+        deadline,
+        settled,
+        winner: settled ? (winningOption === 0 ? 'A' : 'B') : null,
+        totalPot: formatSTRK(totalPotWei),
+        participantCount,
+      };
+
+      betCache.set(betId, { data: newBet, ts: Date.now(), inFlight: null });
+      return newBet;
+
+    } catch (err) {
+      console.error('getBet failed:', err);
+      return null;
+    } finally {
+      const c = betCache.get(betId);
+      if (c) c.inFlight = null;
+    }
+  })();
+
+  const existing = betCache.get(betId);
+  betCache.set(betId, { data: existing?.data as Bet, ts: existing?.ts || 0, inFlight: promise });
+  return promise;
 }
 
 export async function getParticipant(betId: string, index: number): Promise<Participant | null> {
@@ -221,7 +250,6 @@ export async function getParticipant(betId: string, index: number): Promise<Part
       calldata: [betId, String(index)],
     });
 
-    // Participant struct: address, option, has_claimed
     if (!result || result.length < 3) return null;
 
     const address = result[0];
@@ -240,37 +268,80 @@ export async function getParticipant(betId: string, index: number): Promise<Part
 }
 
 export async function getParticipants(betId: string, count: number): Promise<Participant[]> {
-  const participants: Participant[] = [];
-  for (let i = 0; i < count; i++) {
-    const p = await getParticipant(betId, i);
-    if (p) participants.push(p);
+  const cached = participantsCache.get(betId);
+  const now = Date.now();
+
+  const bet = betCache.get(betId)?.data;
+  const isSettled = bet?.settled;
+
+  if (cached && (isSettled || now - cached.ts < CACHE_TTL)) {
+    // Only return cache if we cached at least `count` participants 
+    // (in case a new participant joined and count increased)
+    if (cached.data.length >= count) {
+      return cached.data;
+    }
   }
-  return participants;
+  if (cached?.inFlight) return cached.inFlight;
+
+  const promise = (async () => {
+    try {
+      const promises = [];
+      for (let i = 0; i < count; i++) {
+        promises.push(getParticipant(betId, i));
+      }
+      const results = await Promise.all(promises);
+      const valid = results.filter((p): p is Participant => p !== null);
+
+      participantsCache.set(betId, { data: valid, ts: Date.now(), inFlight: null });
+      return valid;
+    } finally {
+      const c = participantsCache.get(betId);
+      if (c) c.inFlight = null;
+    }
+  })();
+
+  const existing = participantsCache.get(betId);
+  participantsCache.set(betId, { data: existing?.data || [], ts: existing?.ts || 0, inFlight: promise });
+  return promise;
 }
 
 export async function getBetCount(): Promise<number> {
-  try {
-    const provider = getProvider();
-    const result = await provider.callContract({
-      contractAddress: CONTRACT_ADDRESS,
-      entrypoint: 'get_bet_count',
-      calldata: [],
-    });
-    return Number(BigInt(result[0]));
-  } catch (err) {
-    console.error('getBetCount failed:', err);
-    return 0;
-  }
+  const now = Date.now();
+  if (now - betCountCache.ts < CACHE_TTL && betCountCache.data > 0) return betCountCache.data;
+  if (betCountCache.inFlight) return betCountCache.inFlight;
+
+  const promise = (async () => {
+    try {
+      const provider = getProvider();
+      const result = await provider.callContract({
+        contractAddress: CONTRACT_ADDRESS,
+        entrypoint: 'get_bet_count',
+        calldata: [],
+      });
+      const count = Number(BigInt(result[0]));
+      betCountCache.data = count;
+      betCountCache.ts = Date.now();
+      return count;
+    } catch (err) {
+      console.error('getBetCount failed:', err);
+      return 0;
+    } finally {
+      betCountCache.inFlight = null;
+    }
+  })();
+
+  betCountCache.inFlight = promise;
+  return promise;
 }
 
 export async function getAllBets(): Promise<Bet[]> {
   const count = await getBetCount();
-  const bets: Bet[] = [];
+  const promises = [];
   for (let i = 1; i <= count; i++) {
-    const bet = await getBet(String(i));
-    if (bet) bets.push(bet);
+    promises.push(getBet(String(i)));
   }
-  return bets;
+  const results = await Promise.all(promises);
+  return results.filter((b): b is Bet => b !== null);
 }
 
 /**
@@ -279,46 +350,60 @@ export async function getAllBets(): Promise<Bet[]> {
  */
 export async function getAllBetsWithCounts(): Promise<Bet[]> {
   const count = await getBetCount();
-  const bets: Bet[] = [];
+  const promises = [];
   for (let i = 1; i <= count; i++) {
-    const bet = await getBet(String(i));
-    if (bet) {
-      const participants = await getParticipants(String(i), bet.participantCount);
-      bet.optionACount = participants.filter((p) => p.option === 'A').length;
-      bet.optionBCount = participants.filter((p) => p.option === 'B').length;
-      bets.push(bet);
-    }
+    promises.push(getBet(String(i)));
   }
-  return bets;
+  const results = await Promise.all(promises);
+  const validBets = results.filter((b): b is Bet => b !== null);
+
+  const participantsPromises = validBets.map(bet => getParticipants(bet.id, bet.participantCount));
+  const participantsResults = await Promise.all(participantsPromises);
+
+  validBets.forEach((bet, index) => {
+    const participants = participantsResults[index];
+    bet.optionACount = participants.filter((p) => p.option === 'A').length;
+    bet.optionBCount = participants.filter((p) => p.option === 'B').length;
+  });
+
+  return validBets;
 }
 
 /**
  * Fetches all bets the specified user has either created or participated in.
  */
 export async function getUserBets(userAddress: string): Promise<Bet[]> {
+  if (!userAddress) return [];
   const count = await getBetCount();
-  const bets: Bet[] = [];
-  if (!userAddress) return bets;
 
   const normalizedUser = userAddress.toLowerCase().replace(/^0x0*/, '');
 
+  const betPromises = [];
   for (let i = 1; i <= count; i++) {
-    const bet = await getBet(String(i));
-    if (bet) {
-      const creatorNormalized = bet.creator.toLowerCase().replace(/^0x0*/, '');
-      const participants = await getParticipants(String(i), bet.participantCount);
-
-      const isCreator = creatorNormalized === normalizedUser;
-      const isParticipant = participants.some(p => p.address.toLowerCase().replace(/^0x0*/, '') === normalizedUser);
-
-      if (isCreator || isParticipant) {
-        bet.optionACount = participants.filter((p) => p.option === 'A').length;
-        bet.optionBCount = participants.filter((p) => p.option === 'B').length;
-        bets.push(bet);
-      }
-    }
+    betPromises.push(getBet(String(i)));
   }
-  return bets;
+  const betsResult = await Promise.all(betPromises);
+  const validBets = betsResult.filter((b): b is Bet => b !== null);
+
+  const participantsPromises = validBets.map(bet => getParticipants(bet.id, bet.participantCount));
+  const participantsResults = await Promise.all(participantsPromises);
+
+  const userBets: Bet[] = [];
+
+  validBets.forEach((bet, index) => {
+    const participants = participantsResults[index];
+    const creatorNormalized = bet.creator.toLowerCase().replace(/^0x0*/, '');
+    const isCreator = creatorNormalized === normalizedUser;
+    const isParticipant = participants.some(p => p.address.toLowerCase().replace(/^0x0*/, '') === normalizedUser);
+
+    if (isCreator || isParticipant) {
+      bet.optionACount = participants.filter((p) => p.option === 'A').length;
+      bet.optionBCount = participants.filter((p) => p.option === 'B').length;
+      userBets.push(bet);
+    }
+  });
+
+  return userBets;
 }
 
 // ─── STRK balance read ───
